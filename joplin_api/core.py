@@ -38,6 +38,10 @@ class JoplinApi:
     folder_props = 'id, title, created_time, updated_time, user_created_time, user_updated_time, ' \
                    'encryption_cipher_text, encryption_applied, parent_id'
 
+    resource_props = 'id, title, mime, filename, created_time, updated_time, ' \
+                     'user_created_time, user_updated_time, file_extension, encryption_cipher_text,' \
+                     'encryption_applied, encryption_blob_encrypted, size'
+
     def __init__(self, token, **config):
         """
         :param token: string The API token grabbed from the Joplin config page
@@ -147,6 +151,16 @@ class JoplinApi:
         """
         path = f'/notes/{note_id}/tags'
         return await self.query('get', path, self.note_props)
+
+    async def get_notes_resources(self, note_id):
+        """
+        GET /notes/:id/resources
+
+        get all the resources of this note
+        :return: res: result of the get
+        """
+        path = f'/notes/{note_id}/resources'
+        return await self.query('get', path, self.resource_props)
 
     async def create_note(self, title, body, parent_id, **kwargs):
         """
