@@ -53,6 +53,7 @@ class JoplinApi:
         default_host = 'http://127.0.0.1:{}'.format(config.get('JOPLIN_WEBCLIPPER', 41184))
         self.JOPLIN_HOST = config.get('JOPLIN_HOST', default_host)
         self.token = token
+        self.client = httpx.AsyncClient()
 
     async def query(self, method, path, fields='', **payload) -> Response:
         """
@@ -81,10 +82,8 @@ class JoplinApi:
         res = {}
         logger.info(f'method {method} path {full_path} params {params} payload {payload} headers {headers}')
 
-        client = httpx.AsyncClient()
-
         if method == 'get':
-            res = await client.get(full_path, params=params)
+            res = await self.client.get(full_path, params=params)
         elif method == 'post':
 
             if 'resources' in path:
@@ -98,7 +97,7 @@ class JoplinApi:
 
                 files = {'data': (payload['filename'], open(payload['resource_file'], 'rb'), mime)}
 
-                res = await client.post(self.JOPLIN_HOST + '/resources',
+                res = await self.client.post(self.JOPLIN_HOST + '/resources',
                                         files=files,
                                         data={
                                             'props': json.dumps({
@@ -107,11 +106,11 @@ class JoplinApi:
                                         },
                                         params=params)
             else:
-                res = await client.post(full_path, json=payload, params=params)
+                res = await self.client.post(full_path, json=payload, params=params)
         elif method == 'put':
-            res = await client.put(full_path, data=json.dumps(payload), params=params, headers=headers)
+            res = await self.client.put(full_path, data=json.dumps(payload), params=params, headers=headers)
         elif method == 'delete':
-            res = await client.delete(full_path, params=params)
+            res = await self.client.delete(full_path, params=params)
         logger.info(f'Response of WebClipper {res}')
 
         res.raise_for_status()
