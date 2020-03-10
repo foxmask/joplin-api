@@ -62,6 +62,9 @@ class JoplinApi:
         :param fields: fields we want to get
         :param payload: dict with all the necessary things to deal with the API
         :return json data
+
+        :raises HTTPError when a query cannot be executed
+
         """
         if method not in ('get', 'post', 'put', 'delete'):
             raise ValueError('method expected: get, post, put, delete')
@@ -110,6 +113,9 @@ class JoplinApi:
         elif method == 'delete':
             res = await client.delete(full_path, params=params)
         logger.info(f'Response of WebClipper {res}')
+
+        res.raise_for_status()
+
         return res
 
     ##############
