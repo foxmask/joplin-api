@@ -1,4 +1,6 @@
 # import requests
+from pathlib import Path
+
 import pytest
 import json
 from joplin_api import JoplinApi
@@ -21,7 +23,9 @@ async def test_create_get_update_delete_download_resource(get_token):
 
     assert 'title' in properties
 
-    file_name = 'tests/cactus.png'
+    here = Path(__file__).parent
+
+    file_name = here / 'cactus.png'
     res = await joplin.create_resource(file_name, **properties)
     resource_id = json.loads(res.text)['id']
 
@@ -31,7 +35,7 @@ async def test_create_get_update_delete_download_resource(get_token):
     assert res.status_code == 200
 
     properties = {'title': 'test update resource'}
-    file_name = 'tests/update_cactus.png'
+    file_name = here / 'update_cactus.png'
     res = await joplin.update_resources(resource_id, **properties)
     assert res.status_code == 200
 
