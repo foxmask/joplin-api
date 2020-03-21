@@ -98,13 +98,10 @@ class JoplinApi:
                 files = {'data': (payload['filename'], open(payload['resource_file'], 'rb'), mime)}
 
                 res = await self.client.post(self.JOPLIN_HOST + '/resources',
-                                        files=files,
-                                        data={
-                                            'props': json.dumps({
-                                                'title': props['title'],
-                                                'filename': payload['filename']})
-                                        },
-                                        params=params)
+                                             files=files,
+                                             data={'props': json.dumps({'title': props['title'],
+                                                                        'filename': payload['filename']})},
+                                             params=params)
             else:
                 res = await self.client.post(full_path, json=payload, params=params)
         elif method == 'put':
