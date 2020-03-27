@@ -78,11 +78,22 @@ class JoplinApi:
 
         full_path = self.JOPLIN_HOST + path
         headers = {'Content-Type': 'application/json'}
-        params = {'token': self.token, 'fields': fields} if fields else {'token': self.token}
+        params = {'token': self.token}
+        if 'search' not in path:
+            if fields:
+                params = {'token': self.token, 'fields': fields}
+
         res = {}
         logger.info(f'method {method} path {full_path} params {params} payload {payload} headers {headers}')
 
         if method == 'get':
+            if 'search' in path:
+                end_uri = ''
+                # by default type = note so avoid to 'build' the request with type=note
+                if 'type' in payload and payload['type'] != 'note':
+                    end_uri = '&type=' + payload['type']
+                full_path = self.JOPLIN_HOST + path + '?query=' + payload['query'] + end_uri
+
             res = await self.client.get(full_path, params=params)
         elif method == 'post':
 
@@ -522,7 +533,7 @@ class JoplinApi:
     ####################
     # SEARCH
     ####################
-    async def search(self, query, *field) -> Response:
+    async def search(self, query, item_type='note') -> Response:
         """
         Call GET /search?query=YOUR_QUERY to search for notes.
         This end-point supports the field parameter which is recommended to use
@@ -531,24 +542,21 @@ class JoplinApi:
         The query syntax is as described in the main documentation: https://joplinapp.org/#searching
 
         :param query string
-        :param field, 'title' or 'body' or nothing
+        :param item_type, one of 'folder', 'note', 'tag'
         :return: res: json result of the request
         """
-        words = []
-        # exact match
-        if query.startswith('"') and query.endswith('"'):
-            words[0] = query.replace('"', '').replace('"', '')
-        # '*' wildcard use case
-        elif query.endswith('*'):
-            words[0] = query
-        # if space in query
-        elif ' ' in query:
-            # replace multiple space by one if any
-            new_query = re.sub(' +', ' ', query)
-            words = new_query.split(' ')
+        end = ''
+        if query.endswith('*'):
+            end = query[:-1]
+            query = query[:-1]
+        if re.match('^[a-zA-Z0-9_]+$', query):
+            qs = {'query': query + end}
+            if item_type and item_type in ['folder', 'note', 'tag']:
+                qs['type'] = item_type
+
+            res = await self.query('get', '/search/', item_type, **qs)
+            return res
         else:
-            words[0] = query
-        # if a field is specified, just filter with this one, otherwise use both
-        qs = {field: words} if field else {'body': words, 'title': words}
-        res = await self.query('get', '/search/', **qs)
-        return res
+            msg = 'the query can only contains alphanuemeric characters and underscore'
+            logger.warning(msg)
+            raise ValueError(msg)
