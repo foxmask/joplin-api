@@ -7,6 +7,7 @@ import logging
 import os
 import re
 from logging import getLogger
+import urllib.parse
 
 # external lib to use async accesses to the joplin webclipper
 import httpx
@@ -88,12 +89,7 @@ class JoplinApi:
 
         if method == 'get':
             if 'search' in path:
-                end_uri = ''
-                # by default type = note so avoid to 'build' the request with type=note
-                if 'type' in payload and payload['type'] != 'note':
-                    end_uri = '&type=' + payload['type']
-                full_path = self.JOPLIN_HOST + path + '?query=' + payload['query'] + end_uri
-
+                full_path = self.JOPLIN_HOST + path + '?' + payload['query_string']
             res = await self.client.get(full_path, params=params)
         elif method == 'post':
 
@@ -545,18 +541,17 @@ class JoplinApi:
         :param item_type, one of 'folder', 'note', 'tag'
         :return: res: json result of the request
         """
-        end = ''
-        if query.endswith('*'):
-            end = query[:-1]
-            query = query[:-1]
-        if re.match('^[a-zA-Z0-9_]+$', query):
-            qs = {'query': query + end}
-            if item_type and item_type in ['folder', 'note', 'tag']:
-                qs['type'] = item_type
+        # note oriented lookup
+        search_type_allowed = ['folder', 'note', 'tag', 'note_tag', 'resource', 'note_resource', 'resource_local_state']
+        # joplin properties lookup oriented
+        search_type_allowed += ['setting', 'search', 'master_key', 'item_change', 'revision',
+                                'migration', 'smart_filter', 'alarm']
+        data = {'query': query}
+        # if the item_type is not one of the allowed one, the fallback is "note" by default
+        if item_type and item_type in search_type_allowed:
+            data['type'] = item_type
 
-            res = await self.query('get', '/search/', item_type, **qs)
-            return res
-        else:
-            msg = 'the query can only contains alphanuemeric characters and underscore'
-            logger.warning(msg)
-            raise ValueError(msg)
+        data = urllib.parse.urlencode(data)
+        qs = {'query_string': data}
+        res = await self.query('get', '/search/', item_type, **qs)
+        return res
