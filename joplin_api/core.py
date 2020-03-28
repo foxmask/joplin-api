@@ -80,9 +80,8 @@ class JoplinApi:
         full_path = self.JOPLIN_HOST + path
         headers = {'Content-Type': 'application/json'}
         params = {'token': self.token}
-        if 'search' not in path:
-            if fields:
-                params = {'token': self.token, 'fields': fields}
+        if fields:
+            params = {'token': self.token, 'fields': fields}
 
         res = {}
         logger.info(f'method {method} path {full_path} params {params} payload {payload} headers {headers}')
@@ -529,7 +528,7 @@ class JoplinApi:
     ####################
     # SEARCH
     ####################
-    async def search(self, query, item_type='note') -> Response:
+    async def search(self, query, item_type='note', field_restrictions='') -> Response:
         """
         Call GET /search?query=YOUR_QUERY to search for notes.
         This end-point supports the field parameter which is recommended to use
@@ -539,6 +538,7 @@ class JoplinApi:
 
         :param query string
         :param item_type, one of 'folder', 'note', 'tag'
+        :param field_restrictions  'title' or 'body'
         :return: res: json result of the request
         """
         # note oriented lookup
@@ -546,12 +546,18 @@ class JoplinApi:
         # joplin properties lookup oriented
         search_type_allowed += ['setting', 'search', 'master_key', 'item_change', 'revision',
                                 'migration', 'smart_filter', 'alarm']
+
+        return_field_allowed = ['title', 'body']
+
         data = {'query': query}
         # if the item_type is not one of the allowed one, the fallback is "note" by default
         if item_type and item_type in search_type_allowed:
             data['type'] = item_type
 
+        if field_restrictions in return_field_allowed:
+            data['field'] = field_restrictions
+
         data = urllib.parse.urlencode(data)
         qs = {'query_string': data}
-        res = await self.query('get', '/search/', item_type, **qs)
+        res = await self.query('get', '/search/', field_restrictions, **qs)
         return res
