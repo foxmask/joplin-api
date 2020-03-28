@@ -549,7 +549,11 @@ class JoplinApi:
         if query.endswith('*'):
             end = query[:-1]
             query = query[:-1]
-        if re.match('^[a-zA-Z0-9_]+$', query):
+        if re.match('^[a-zA-Z0-9_: ]+$', query):
+            if re.search('((?<!body)(?<!title)):', query):
+                msg = 'only "body:" or "title:" are can be used as field restrictions'
+                logger.warning(msg)
+                raise ValueError(msg)
             qs = {'query': query + end}
             if item_type and item_type in ['folder', 'note', 'tag']:
                 qs['type'] = item_type
@@ -557,6 +561,6 @@ class JoplinApi:
             res = await self.query('get', '/search/', item_type, **qs)
             return res
         else:
-            msg = 'the query can only contains alphanuemeric characters and underscore'
+            msg = 'the query can only contains alphanumeric characters and underscore'
             logger.warning(msg)
             raise ValueError(msg)
