@@ -2,6 +2,7 @@
 """
     Joplin Editor API - https://joplinapp.org/api/
 """
+from copy import copy
 import json
 import logging
 import os
@@ -84,7 +85,10 @@ class JoplinApi:
             params = {'token': self.token, 'fields': fields}
 
         res = {}
-        logger.info(f'method {method} path {full_path} params {params} payload {payload} headers {headers}')
+        params_no_token = copy(params)
+        params_no_token['token'] = '***'
+        log = f'method {method} path {full_path} params {params_no_token} payload {payload} headers {headers}'
+        logger.debug(log)
 
         if method == 'get':
             if 'search' in path:
@@ -114,7 +118,7 @@ class JoplinApi:
             res = await self.client.put(full_path, data=json.dumps(payload), params=params, headers=headers)
         elif method == 'delete':
             res = await self.client.delete(full_path, params=params)
-        logger.info(f'Response of WebClipper {res}')
+        logger.debug(f'Response of WebClipper {res}')
 
         res.raise_for_status()
 

@@ -1,6 +1,6 @@
 # Joplin Api
 
-![Joplin API](https://scrutinizer-ci.com/g/foxmask/joplin-api/badges/quality-score.png?b=master "scrutinizer")
+![Joplin API](https://scrutinizer-ci.com/g/foxmask/joplin-api/badges/quality-score.png?b=master "joplin-api")
 
 The API of [Joplin Editor](https://joplinapp.org/) in Python 3.6+
 
