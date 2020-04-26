@@ -107,6 +107,44 @@ async def test_create_note(get_token):
 
 
 @pytest.mark.asyncio
+async def test_create_note_no_body(get_token):
+    joplin = JoplinApi(token=get_token)
+    # 1 - create a folder
+    res = await joplin.create_folder(folder='MY FOLDER3')
+    data = res.json()
+    parent_id = data['id']
+    assert type(parent_id) is str
+    # 2 - create a note with tag
+    body = ''
+    assert type(body) is str
+    kwargs = {'tags': 'tag1, tag2', 'id': '00a87474082744c1a8515da6aa5792d2'}
+    assert 'id' in kwargs
+    assert re.match('[a-z0-9]{32}', kwargs['id'])
+    # let's set a user created time
+    timestamp = 1545730073
+    kwargs['user_created_time'] = timestamp
+    res = await joplin.create_note(title="NOTE TEST", body='',
+                                   parent_id=parent_id, **kwargs)
+    assert res.status_code == 200
+    note_id = res.json()['id']
+
+    note_user_created_time = res.json()['user_created_time']
+    assert note_user_created_time == timestamp
+
+    # drop the testing data
+    # 4 - get the tag of that note
+    tags_to_delete = await joplin.get_notes_tags(note_id)
+    # 5 - delete the tags
+    for line in tags_to_delete.json():
+        await joplin.delete_tags_notes(line['id'], note_id)
+
+    # delete note
+    await joplin.delete_note(note_id)
+    # delete folder
+    await joplin.delete_folder(parent_id)
+
+
+@pytest.mark.asyncio
 async def test_get_notes(get_token):
     joplin = JoplinApi(token=get_token)
 
