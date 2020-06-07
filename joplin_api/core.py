@@ -418,9 +418,9 @@ class JoplinApi:
         create a tag from a note
         :return: res: json result of the get
         """
-        data = {'title': tag}
-        path = f'/tags/{note_id}/notes'
-        return await self.query('post', path, **data)
+        data = {"id": note_id}
+        path = f"/tags/{tag}/notes"
+        return await self.query("post", path, **data)
 
     async def delete_tags_notes(self, tag_id, note_id):
         """
