@@ -5,5 +5,6 @@
 """
 
 from .core import JoplinApi
+from .core_sync import JoplinApiSync
 
-__version__ = "1.5.6"
+__version__ = "1.6.0"

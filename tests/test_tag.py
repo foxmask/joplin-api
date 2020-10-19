@@ -9,7 +9,7 @@ async def test_create_tag(get_token):
     :param get_token:
     :return:
     """
-    
+
     joplin = JoplinApi(token=get_token)
 
     title = 'TEST TAG1'
@@ -17,10 +17,9 @@ async def test_create_tag(get_token):
     res = await joplin.create_tag(title=title)
     assert type(res.text) is str
     assert res.status_code == 200
-    
+
     res = await joplin.delete_tag(res.json()['id'])
     assert res.status_code == 200
-
 
 
 @pytest.mark.asyncio
@@ -30,7 +29,7 @@ async def test_add_tag(get_token):
     :param get_token:
     :return:
     """
-    
+
     joplin = JoplinApi(token=get_token)
 
     # 1 - create a folder
@@ -56,7 +55,6 @@ async def test_add_tag(get_token):
     res = await joplin.create_tags_notes(note_id=note_id, tag=tag_id)
     assert res.status_code == 200
 
-
     # drop the testing data
     # delete tag
     await joplin.delete_tag(tag_id)
@@ -64,4 +62,3 @@ async def test_add_tag(get_token):
     await joplin.delete_note(note_id)
     # delete folder
     await joplin.delete_folder(parent_id)
-    
